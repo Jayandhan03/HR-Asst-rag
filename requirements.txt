@@ -1,0 +1,44 @@
+# Core RAG Framework
+langchain
+langchain-community
+langchain-core
+qdrant-client
+
+# PDF Ingestion
+PyMuPDF          # for fitz (optional streaming)
+pdfminer.six     # backup for PDF parsing
+pdfplumber       # optional for table-heavy PDFs
+
+# Embeddings & LLMs
+openai           # or use groq/anthropic/gemini as needed
+tiktoken
+
+# Chunking & Processing
+numpy
+scikit-learn
+
+# Vector Similarity / Reranking
+rank_bm25        # BM25 reranking
+faiss-cpu        # optional if you want local FAISS index
+
+# Observability
+langsmith
+opentelemetry-api
+opentelemetry-sdk
+
+# Frontend (optional)
+streamlit
+gradio
+
+# LLM Fallback/Retry Support (if used)
+httpx
+tenacity
+
+# DOCX Rendering
+python-docx
+
+# Logging
+loguru  # optional but beautiful logging
+
+# Misc
+python-dotenv
