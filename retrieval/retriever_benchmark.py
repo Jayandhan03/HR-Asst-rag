@@ -1,8 +1,8 @@
 import time
 from typing import List
 from qdrant_client import QdrantClient
-from langchain_qdrant import Qdrant
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_community.vectorstores import Qdrant
+from langchain_community.embeddings import HuggingFaceEmbeddings 
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
