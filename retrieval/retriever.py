@@ -1,5 +1,5 @@
-from qdrant_client import QdrantClient
 from langchain_qdrant import Qdrant
+from qdrant_client import QdrantClient
 from langchain_huggingface import HuggingFaceEmbeddings
 import os
 from config import QDRANT_HOST, QDRANT_API_KEY, QDRANT_COLLECTIONS

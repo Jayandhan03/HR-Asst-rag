@@ -17,6 +17,8 @@ from retrieval.retriever import get_retriever
 from Reranker.reranker import bm25_rerank
 from render_to_docx import render_to_docx
 from llm.response import get_llm_response
+from llm.selector import should_use_rag  
+from llm.direct_answer import get_direct_answer  
 
 # === 🚀 HR Assistant Main Loop ===
 def run_hr_assistant():
@@ -24,15 +26,13 @@ def run_hr_assistant():
     print("Type your query related to HR policy (type 'exit' to quit)\n")
 
     retriever = get_retriever(index_type="hnsw", k=10)
-
-    conversation_log = [] 
+    conversation_log = []
 
     while True:
         query = input("👤 You: ").strip()
         if query.lower() in ["exit", "quit", "end"]:
             print("👋 Session ended. Take care!\n")
 
-            # 🔄 Save full conversation log to docx
             if conversation_log:
                 full_convo = "\n\n".join(
                     f"👤 You: {q}\n🤖 HR Assistant: {a}" for q, a in conversation_log
@@ -40,26 +40,28 @@ def run_hr_assistant():
                 filename = f"HR_Conversation_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.docx"
                 render_to_docx(query="HR Conversation", response=full_convo, filename=filename)
                 print(f"📄 Full conversation saved to: {filename}\n")
-
             break
 
         try:
-            # Step 1: Retrieve relevant documents
-            retrieved_docs = retriever.get_relevant_documents(query)
+            # Step 0: Decide if RAG is needed
+            if should_use_rag(query):
+                # Step 1: Retrieve relevant documents
+                retrieved_docs = retriever.get_relevant_documents(query)
 
-            # Step 2: Rerank using BM25
-            reranked_docs = bm25_rerank(query=query, documents=retrieved_docs, top_n=5)
+                # Step 2: Rerank using BM25
+                reranked_docs = bm25_rerank(query=query, documents=retrieved_docs, top_n=5)
 
-            # Step 3: Generate response with memory + context
-            response, memory = get_llm_response(query=query, reranked_docs=reranked_docs)
+                # Step 3: Generate response using retrieved context
+                response, memory = get_llm_response(query=query, reranked_docs=reranked_docs)
+            else:
+                # Direct LLM response without context
+                response = get_direct_answer(query)
 
-            # Step 4: Print response
+            # Step 4: Show answer
             print(f"\n🤖 HR Assistant: {response}\n")
 
-            # Step 5: Save to DOCX
-            filename = f"HR_Answer_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.docx"
-            render_to_docx(query=query, response=response, filename=filename)
-            print(f"📄 Answer saved to: {filename}\n")
+            # Step 5: Add to conversation log
+            conversation_log.append((query, response))
 
         except Exception as e:
             print(f"❌ Error: {str(e)}\n")
