@@ -34,7 +34,7 @@ qdrant_client = QdrantClient(
     api_key=QDRANT_API_KEY,
 )
 
-def benchmark_retriever(collection_name: str, benchmark_data: Dict[str, str], k: int = 3):
+def benchmark_retriever(collection_name: str, benchmark_data: Dict[str, str], k: int = 8):
     """
     Benchmarks the retriever for a given collection on response time and accuracy.
 

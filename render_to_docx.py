@@ -17,3 +17,11 @@ def render_to_docx(query: str, response: str, filename: str = "output.docx") -> 
     doc.add_heading("AI-Generated Answer", level=2)
     doc.add_paragraph(response)
     doc.save(filename)
+
+
+
+# | Index Type         | Accuracy        | Speed                | Memory   | Use Case                          |
+# | ------------------ | --------------- | -------------------- | -------- | --------------------------------- |
+# | **FLAT**           | Highest (exact) | Slowest              | Highest  | Small datasets, highest precision |
+# | **HNSW**           | Very good       | Fast                 | Moderate | General-purpose, large datasets   |
+# | **Quantized (PQ)** | Slightly lower  | Fastest (low memory) | Lowest   | Huge datasets, memory constrained |

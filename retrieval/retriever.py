@@ -15,7 +15,7 @@ qdrant_client = QdrantClient(
     api_key=QDRANT_API_KEY
 )
 
-def get_retriever(index_type: str = "hnsw", k: int = 5):
+def get_retriever(index_type: str = "hnsw", k: int = 10):
     """
     Returns a retriever for a given Qdrant collection (index_type).
     """

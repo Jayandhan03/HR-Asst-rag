@@ -19,7 +19,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 @traceable(name="BM25 Reranker")
-def bm25_rerank(query: str, documents: List[Document], top_n: int = 5) -> List[Document]:
+def bm25_rerank(query: str, documents: List[Document], top_n: int = 10) -> List[Document]:
     """
     Reranks retrieved documents using BM25 keyword relevance.
 
