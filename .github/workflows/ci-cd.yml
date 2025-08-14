@@ -1,0 +1,87 @@
+name: HR Assistant Bot CI/CD
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  # ==============================
+  # 1️⃣ CI: Vector Store Ingestion
+  # ==============================
+  vector-ingestion:
+    name: Run Vector Ingestion Pipeline (main.py)
+    runs-on: ubuntu-latest
+    env:
+      QDRANT_HOST: ${{ secrets.QDRANT_HOST }}
+      QDRANT_API_KEY: ${{ secrets.QDRANT_API_KEY }}
+      LANGCHAIN_API_KEY: ${{ secrets.LANGCHAIN_API_KEY }}
+      LANGCHAIN_PROJECT: ${{ secrets.LANGCHAIN_PROJECT }}
+      LANGCHAIN_ENDPOINT: ${{ secrets.LANGCHAIN_ENDPOINT }}
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run ingestion pipeline
+        run: python main.py
+
+  # ==============================
+  # 2️⃣ CI: Streamlit App Test Build
+  # ==============================
+  streamlit-build:
+    name: Test Build Streamlit App (app.py)
+    runs-on: ubuntu-latest
+    needs: vector-ingestion
+    env:
+      QDRANT_HOST: ${{ secrets.QDRANT_HOST }}
+      QDRANT_API_KEY: ${{ secrets.QDRANT_API_KEY }}
+      LANGCHAIN_API_KEY: ${{ secrets.LANGCHAIN_API_KEY }}
+      LANGCHAIN_PROJECT: ${{ secrets.LANGCHAIN_PROJECT }}
+      LANGCHAIN_ENDPOINT: ${{ secrets.LANGCHAIN_ENDPOINT }}
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Test Streamlit app launch
+        run: streamlit run app.py --server.headless true & sleep 10 && kill $!
+
+  # ==============================
+  # 3️⃣ CD: Deploy to Hugging Face Spaces
+  # ==============================
+  deploy-hf:
+    name: Deploy to Hugging Face Space
+    runs-on: ubuntu-latest
+    needs: streamlit-build
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Push code to Hugging Face Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}   # 🔹 Your HF Access Token
+          HF_USERNAME: ${{ secrets.HF_USERNAME }} # 🔹 Your HF username
+          HF_SPACE: ${{ secrets.HF_SPACE }}       # 🔹 Your HF Space name
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git remote add space https://$HF_USERNAME:$HF_TOKEN@huggingface.co/spaces/$HF_USERNAME/$HF_SPACE
+          git push space main --force

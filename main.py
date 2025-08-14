@@ -44,3 +44,22 @@ def run_ingestion_pipeline(folder_path: str):
 if __name__ == "__main__":
     folder_path = r"D:\AGENTIC  AI\PROJECTS\hr-assistant\data"
     run_ingestion_pipeline(folder_path)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
