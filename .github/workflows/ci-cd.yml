@@ -21,6 +21,16 @@ jobs:
       GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
     steps:
       - uses: actions/checkout@v3
+        with:
+          lfs: true        # ✅ Pull Git LFS files
+          fetch-depth: 0   # Full history to avoid shallow clone issues
+
+      - name: Install Git LFS
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git-lfs
+          git lfs install
+          git lfs pull   # ✅ Ensure actual PDF files are present
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -51,6 +61,16 @@ jobs:
       GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
     steps:
       - uses: actions/checkout@v3
+        with:
+          lfs: true
+          fetch-depth: 0
+
+      - name: Install Git LFS
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git-lfs
+          git lfs install
+          git lfs pull
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -76,7 +96,15 @@ jobs:
       - name: Checkout full repo
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0   # Full history to avoid shallow update issues
+          lfs: true
+          fetch-depth: 0
+
+      - name: Install Git LFS
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git-lfs
+          git lfs install
+          git lfs pull
 
       - name: Configure Git for HF push
         run: |
