@@ -57,7 +57,7 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
-
+#g
 # Ignore data files
 *.docx
 *.db
