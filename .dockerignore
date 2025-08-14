@@ -26,7 +26,6 @@ logs/
 output/
 
 # Data files (if large, remove or copy separately in Dockerfile if needed)
-data/
 datasets/
 
 # Editor / OS specific files
