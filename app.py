@@ -9,7 +9,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_groq import ChatGroq
 from langchain.chains import LLMChain
 
-# Your other project imports
+# Your other project importss
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from retrieval.retriever import get_retriever
 from Reranker.reranker import bm25_rerank
