@@ -22,10 +22,6 @@ output/
 *.tmp
 *.bak
 
-# Document data
-data/*.pdf
-data/*.docx
-
 # Cache or FAISS/DB dump files
 *.faiss
 *.npy
