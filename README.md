@@ -1,4 +1,18 @@
- 🧠 HR Policy Q&A Assistant (RAG-powered)
+ ---
+title: HR Assistant Bot
+emoji: 🤖
+colorFrom: green
+colorTo: blue
+sdk: streamlit
+sdk_version: "1.26.0"
+app_file: app.py
+pinned: false
+---
+
+# HR Assistant Bot
+
+This Space allows employees to query HR policies using an AI-powered assistant.
+🧠 HR Policy Q&A Assistant (RAG-powered)
 
 A Retrieval-Augmented Generation (RAG) system that intelligently answers employee HR policy questions using PDF documents. Built with LangChain and Qdrant, the assistant retrieves, reranks, and generates accurate answers from company policy files.
 
