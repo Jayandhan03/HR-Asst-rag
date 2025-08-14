@@ -59,7 +59,6 @@ __pycache__/
 *.pyd
 
 # Ignore data files
-*.pdf
 *.docx
 *.db
 *.sqlite
