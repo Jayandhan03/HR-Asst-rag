@@ -50,7 +50,7 @@ def streamlit_hr_assistant():
             raise RuntimeError("GROQ_API_KEY environment variable is missing. Please set it in your HF Space Secrets.")
         st.session_state.llm = ChatGroq(
             temperature=0.2,
-            model_name="llama3-70b-8192",
+            model_name="openai/gpt-oss-120b",
             api_key=groq_api_key
         )
 

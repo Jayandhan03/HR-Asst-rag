@@ -9,7 +9,7 @@ Question: {question}
 Answer in a helpful, professional, and concise manner.
 """)
 
-llm = ChatGroq(model_name="llama3-70b-8192", temperature=0.5)
+llm = ChatGroq(model_name="openai/gpt-oss-120b", temperature=0.5)
 
 def get_direct_answer(question: str) -> str:
     return llm.predict(direct_prompt.format(question=question)).strip()

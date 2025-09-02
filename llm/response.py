@@ -36,7 +36,7 @@ def create_chat_chain() -> LLMChain:
 
     llm = ChatGroq(
         temperature=0.2,
-        model_name="llama3-70b-8192",
+        model_name="openai/gpt-oss-120b",
         groq_api_key=os.getenv("GROQ_API_KEY")
     )
 

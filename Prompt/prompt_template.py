@@ -1,6 +1,5 @@
 from langchain.prompts import PromptTemplate
 
-# === 🧠 HR Policy Answering Prompt Template ===
 hr_policy_prompt = PromptTemplate(
     input_variables=["context", "question"],
     template="""

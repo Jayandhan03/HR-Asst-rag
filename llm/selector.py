@@ -9,7 +9,7 @@ Question: {question}
 Respond with only "yes" if the question requires referring to HR documents, policies, or handbook. Otherwise, respond with "no".
 """)
 
-llm = ChatGroq(model_name="llama3-70b-8192", temperature=0)
+llm = ChatGroq(model_name="openai/gpt-oss-120b", temperature=0)
 
 def should_use_rag(question: str) -> bool:
     response = llm.predict(classifier_prompt.format(question=question)).strip().lower()
