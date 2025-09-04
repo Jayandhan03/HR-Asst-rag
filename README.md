@@ -97,16 +97,7 @@ python Final/Final_Pipeline.py --query "Is my spouse covered under the company h
 * **OpenAI / Ollama / HuggingFace**
 * **BM25 / MMR**
 * **LangSmith**
-* **Python**, **Docker**
-
----
-
-## 🛠️ Planned Improvements
-
-* ✅ Streamlit / Gradio UI
-* ✅ Redis/SQLite-based chat memory
-* ✅ Docker + cloud deployment DOCKER COMMAND - {"http://localhost:8501/",docker run --env-file .env -p 8501:8501 hr-assistant-bot:latest}
-* ✅ Slack/MS Teams integration
+* **Python**
 
 ---
 
@@ -121,5 +112,6 @@ python Final/Final_Pipeline.py --query "Is my spouse covered under the company h
 MIT License
 
 ```
+
 
 
