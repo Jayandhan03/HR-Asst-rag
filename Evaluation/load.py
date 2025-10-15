@@ -16,5 +16,5 @@ def load_benchmarks(json_folder):
             print(f"❌ Error loading {file_path}: {e}")
     return all_data
 
-benchmark_data = load_benchmarks(r"D:\AGENTIC  AI\PROJECTS\hr-assistant\Benchmark")
+benchmark_data = load_benchmarks(r"D:\AGENTIC_AI\PROJECTS\hr-assistant\Benchmark")
 print(f"Loaded {len(benchmark_data)} benchmark queries.")

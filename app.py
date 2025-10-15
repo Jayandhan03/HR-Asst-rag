@@ -1,139 +1,141 @@
 import os
-import sys
-from datetime import datetime
-import io
 import streamlit as st
-
-# LangChain components needed
+from dotenv import load_dotenv
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_groq import ChatGroq
 from langchain.chains import LLMChain
+from langchain.memory import ConversationBufferMemory
+from langchain_groq import ChatGroq
+from retrieval.retriever import get_retriever  # Assuming this is in a 'retrieval' folder
+from Reranker.reranker import bm25_rerank      # Assuming this is in a 'Reranker' folder
+from langchain_core.documents import Document
 
-# Your other project importss
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from retrieval.retriever import get_retriever
-from Reranker.reranker import bm25_rerank
-from llm.selector import should_use_rag
-from llm.direct_answer import get_direct_answer
+# --- Helper Functions ---
+def format_docs(docs: list[Document]) -> str:
+    """Join document chunks into one context string."""
+    if not docs:
+        return "No relevant documents found."
+    return "\n\n".join(doc.page_content.strip() for doc in docs)
 
-# Simple function to format chat history for the prompt
-def format_chat_history(chat_log: list) -> str:
-    if not chat_log:
-        return "No prior conversation history."
-    return "\n".join(f"Human: {q}\nAssistant: {a}" for q, a in chat_log)
+# --- Main Streamlit Application ---
+def main():
+    """
+    Main function to run the Streamlit application.
+    """
+    load_dotenv()
+    groq_api_key = os.getenv("GROQ_API_KEY")
+    if not groq_api_key:
+        st.error("❌ Missing GROQ_API_KEY. Set it in your environment first.")
+        st.stop()
 
-def get_chat_log_text(chat_log):
-    if not chat_log:
-        return "No conversation yet."
-    return "\n".join(f"Q{i+1}: {q}\nA{i+1}: {a}" for i, (q, a) in enumerate(chat_log))
+    # --- App Configuration ---
+    st.set_page_config(
+        page_title="Resilience X HR Policy Assistant",
+        page_icon="🤖",
+        layout="centered"
+    )
+    st.title("🤖 Resilience X HR Policy Assistant")
+    st.markdown("""
+        Ask questions about our company HR policies.
+        The assistant will only provide answers based on the official policy documents.
+        Previous queries are remembered via LangChain memory.
+    """)
 
-# === 🚀 HR Assistant Main Loop ===
-def streamlit_hr_assistant():
-    st.set_page_config(page_title="HR Policy Assistant", layout="centered")
-    st.title("🤖 HR Policy Assistant")
-    st.markdown("Ask any question related to the HR policy document.")
+    # --- Initialize Retriever and LLM ---
+    # This assumes get_retriever is defined in your project to initialize your vector store
+    try:
+        retriever = get_retriever(index_type="hnsw", k=10)
+    except Exception as e:
+        st.error(f"❌ Failed to initialize the document retriever: {e}")
+        st.stop()
 
-    # === 🧠 INITIALIZE STATEFUL OBJECTS ONCE ===
+    llm = ChatGroq(
+        temperature=0,
+        model_name="openai/gpt-oss-120b",
+        api_key=groq_api_key,
+    )
 
-    # 1. Initialize Conversation Log
-    if "conversation_log" not in st.session_state:
-        st.session_state.conversation_log = []
-
-    # 2. Initialize Retriever
-    if "retriever" not in st.session_state:
-        st.session_state.retriever = get_retriever(index_type="hnsw", k=10)
-
-    # 3. Initialize LLM with Groq API key from environment
-    if "llm" not in st.session_state:
-        groq_api_key = os.getenv("GROQ_API_KEY")
-        if not groq_api_key:
-            raise RuntimeError("GROQ_API_KEY environment variable is missing. Please set it in your HF Space Secrets.")
-        st.session_state.llm = ChatGroq(
-            temperature=0.2,
-            model_name="openai/gpt-oss-120b",
-            api_key=groq_api_key
+    # --- Initialize LangChain Memory ---
+    # Using st.session_state to persist memory across reruns
+    if 'memory' not in st.session_state:
+        st.session_state.memory = ConversationBufferMemory(
+            memory_key="chat_history",
+            input_key="input",
+            output_key="output",
+            return_messages=False,
         )
 
-    # 4. Initialize Prompt Template
-    if "prompt" not in st.session_state:
-        st.session_state.prompt = ChatPromptTemplate.from_template(
-            """
-            System: You are an HR policy assistant for Resilience X.
-            Your primary task is to answer user queries based on the provided context and conversation history.
-            1. Review the 'Conversation History' to understand context.
-            2. Read the 'Context from Documents' to find relevant facts.
-            3. Synthesize the information from history and documents.
-            4. If documents do not contain the answer, suggest clarification from authorities. Do not make up information.
-            5. Keep the answer compact and to the point.
+    # --- Prompt Template ---
+    # This template strictly instructs the LLM and includes conversation history
+    prompt = ChatPromptTemplate.from_messages([
+        ("system",
+         "You are an HR policy assistant for Resilience X.\n"
+         "ONLY answer based on the provided context from documents.\n"
+         "Do NOT use any knowledge outside the provided documents.\n"
+         "If the answer is not in the documents, respond that you do not have enough information to answer.\n"
+         "Keep answers concise and professional."),
+        ("human",
+         "Conversation History:\n{chat_history}\n\n"
+         "Context from Documents:\n{context}\n\n"
+         "User Query: {input}\n\n"
+         "Final Answer:")
+    ])
 
-            ---
-            Conversation History:
-            {chat_history}
-            ---
-            Context from Documents:
-            {context}
-            ---
-            User's Current Query: {input}
-            ---
-            Final Answer:
-            """
-        )
+    # --- LLM Chain ---
+    # The chain combines the prompt, LLM, and memory
+    chat_chain = LLMChain(
+        llm=llm,
+        prompt=prompt,
+        memory=st.session_state.memory,
+        output_key="output",
+        verbose=False,
+    )
+    
+    # --- Display chat history ---
+    if 'messages' not in st.session_state:
+        st.session_state.messages = []
 
-    # Display conversation history
-    for q, a in st.session_state.conversation_log:
-        with st.chat_message("user"):
-            st.markdown(q)
-        with st.chat_message("assistant"):
-            st.markdown(a)
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
 
-    # Handle User Input
-    if user_input := st.chat_input("Type your HR-related question here..."):
+
+    # --- User Input and Response Logic ---
+    if user_input := st.chat_input("Ask a question about our HR policies..."):
+        # Display user message in chat
         with st.chat_message("user"):
             st.markdown(user_input)
+        
+        st.session_state.messages.append({"role": "user", "content": user_input})
 
-        with st.spinner("Thinking..."):
-            try:
-                if should_use_rag(user_input):
-                    retrieved_docs = st.session_state.retriever.get_relevant_documents(user_input)
-                    reranked_docs = bm25_rerank(query=user_input, documents=retrieved_docs, top_n=5)
-                    context = "\n\n".join(doc.page_content.strip() for doc in reranked_docs)
-                else:
-                    context = "No documents were retrieved as the query was determined to be a general question."
+        try:
+            with st.spinner("Searching official HR documents..."):
+                # 1. Retrieve relevant documents
+                retrieved_docs = retriever.get_relevant_documents(user_input)
 
-                chat_chain = LLMChain(
-                    llm=st.session_state.llm,
-                    prompt=st.session_state.prompt,
-                    verbose=True
-                )
+                # 2. Rerank the results for better relevance
+                reranked_docs = bm25_rerank(query=user_input, documents=retrieved_docs, top_n=5)
 
-                chat_history_str = format_chat_history(st.session_state.conversation_log)
-                result = chat_chain.invoke({
-                    "chat_history": chat_history_str,
-                    "context": context,
-                    "input": user_input
-                })
-                response = result["text"]
+                # 3. Format documents into a single context string
+                context = format_docs(reranked_docs)
 
-            except Exception as e:
-                response = f"An error occurred: {str(e)}"
+            with st.spinner("Generating response..."):
+                # 4. LLM reasons strictly based on retrieved context + LangChain memory
+                response = chat_chain.predict(
+                    input=user_input,
+                    context=context
+                ).strip()
 
-        with st.chat_message("assistant"):
-            st.markdown(response)
+            # Display assistant response in chat
+            with st.chat_message("assistant"):
+                st.markdown(response)
+            
+            st.session_state.messages.append({"role": "assistant", "content": response})
 
-        st.session_state.conversation_log.append((user_input, response))
+            # Note: The LLMChain automatically handles saving the context to memory.
+            # The manual `memory.save_context` call is not needed when using the chain's `predict` method.
 
-    # Download conversation log
-    if st.session_state.conversation_log:
-        chat_log_text = get_chat_log_text(st.session_state.conversation_log)
-        chat_log_bytes = io.BytesIO(chat_log_text.encode("utf-8"))
-
-        st.download_button(
-            label="📥 Download Conversation Log",
-            data=chat_log_bytes,
-            file_name=f"hr_conversation_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
-            mime="text/plain",
-            key="download_chat_log"
-        )
+        except Exception as e:
+            st.error(f"❌ An error occurred: {e}")
 
 if __name__ == "__main__":
-    streamlit_hr_assistant()
+    main()
