@@ -1,4 +1,3 @@
-# hybrid_retriever_optimal.py
 import time
 import json
 import sys

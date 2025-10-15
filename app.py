@@ -5,8 +5,8 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain.chains import LLMChain
 from langchain.memory import ConversationBufferMemory
 from langchain_groq import ChatGroq
-from retrieval.retriever import get_retriever  # Assuming this is in a 'retrieval' folder
-from Reranker.reranker import bm25_rerank      # Assuming this is in a 'Reranker' folder
+from retrieval.retriever import get_retriever  
+from Reranker.reranker import bm25_rerank      
 from langchain_core.documents import Document
 
 # --- Helper Functions ---
