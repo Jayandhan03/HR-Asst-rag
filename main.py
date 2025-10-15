@@ -5,13 +5,11 @@ from ingest.loader import PDFStreamingLoader
 from chunking.semantic_chunker import DocumentChunker
 import os
 from dotenv import load_dotenv
-from embedding.embeddings import embed_documents
 from vectorstore.qdrant_db import create_qdrant_collection, insert_documents
 from config import QDRANT_COLLECTIONS
 from embedding.embeddings import embedding_model
 from Tracing.Tracing import trace_block, traceable_fn
 
-# Optionally load env vars for LangSmith tracing
 load_dotenv()
 
 # Activate LangSmith tracing if ENV is set
@@ -44,14 +42,6 @@ def run_ingestion_pipeline(folder_path: str):
 if __name__ == "__main__":
     folder_path = os.path.join(os.path.dirname(__file__), "data")
     run_ingestion_pipeline(folder_path)
-
-
-
-
-
-#hello
-
-
 
 
 
